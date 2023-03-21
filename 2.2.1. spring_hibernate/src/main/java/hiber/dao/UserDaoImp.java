@@ -11,8 +11,12 @@ import java.util.List;
 @Repository
 public class UserDaoImp implements UserDao {
 
+    private final SessionFactory sessionFactory;
+
     @Autowired
-    private SessionFactory sessionFactory;
+    public UserDaoImp(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     @Override
     public void add(User user) {
@@ -20,19 +24,18 @@ public class UserDaoImp implements UserDao {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<User> listUsers() {
-        TypedQuery<User> query = sessionFactory.getCurrentSession().createQuery("from User");
+        TypedQuery<User> query = sessionFactory.openSession().createQuery("from User", User.class);
         return query.getResultList();
     }
 
     @Override
     public User getUserByCarModelAndSeries(String model, int series) {
-        TypedQuery<User> query = sessionFactory.getCurrentSession().createQuery(
-                "FROM User as u INNER JOIN FETCH u.car as c WHERE c.model = :model AND c.series= :series");
+        TypedQuery<User> query = sessionFactory.openSession().createQuery(
+                "SELECT u FROM User u JOIN u.car c WHERE c.model = :model AND c.series = :series",
+                User.class);
         query.setParameter("model", model);
         query.setParameter("series", series);
         return query.getSingleResult();
     }
-
 }
